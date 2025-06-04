@@ -51,9 +51,28 @@ def solve_bvp_finite_difference(n):
     6. 处理边界条件对右端向量的影响
     """
     # TODO: 在此实现有限差分法 (预计30-40行代码)
-    # [STUDENT_CODE_HERE]
-    
-    raise NotImplementedError("请在此处实现有限差分法")
+    i = np.arange(0,n + 2)
+    h = 5 / (n + 1)  # 网格步长
+    x_i = i*h  # 网格点 x_i = i*h
+    y = np.zeros(n + 2)  # 初始化解向量 y，包括边界点
+    y[0] = 0  # 边界条件 y(0) = 0
+    y[-1] = 3  # 边界条件 y(5) = 3
+    A = np.zeros((n, n))  # 系数矩阵
+    b = np.zeros(n)  # 右端向量
+    # 填充系数矩阵 A 和右端向量 b
+    for i in range(1, n + 1):
+        A[i - 1, i - 1] = (h**2) * (-np.exp(x_i[i])) - 2  # 对角线
+        if i > 1:
+            A[i - 1, i - 2] = 1 - (h/2)*(-np.sin(x_i[i]))  # 左侧
+        if i < n:
+            A[i - 1, i] = 1 + (h/2)*(-np.sin(x_i[i]))  # 右侧
+        b[i - 1] = (h**2) * (x_i[i]**2)  # 右端项
+    # 处理边界条件对右端向量的影响
+    b[0] -= A[0, 0] * y[0]  # 左边界条件影响
+    b[-1] -= A[-1, -1] * y[-1]  # 右边界条件影响
+    # 求解线性系统
+    y[1:-1] = solve(A, b)
+    return x_i, y
 
 
 # ============================================================================
@@ -87,8 +106,9 @@ def ode_system_for_solve_bvp(x, y):
     """
     # TODO: 在此实现一阶ODE系统 (预计5-8行代码)
     # [STUDENT_CODE_HERE]
-    
-    raise NotImplementedError("请在此处实现ODE系统")
+    dy0_dx = y[1]  # y' = dy/dx
+    dy1_dx = -np.sin(x) * y[1] - np.exp(x) * y[0] + x**2  # y'' = dy'/dx
+    return np.vstack((dy0_dx, dy1_dx))    
 
 
 def boundary_conditions_for_solve_bvp(ya, yb):
@@ -110,8 +130,7 @@ def boundary_conditions_for_solve_bvp(ya, yb):
     """
     # TODO: 在此实现边界条件 (预计1-2行代码)
     # [STUDENT_CODE_HERE]
-    
-    raise NotImplementedError("请在此处实现边界条件")
+    return np.array([ya[0], yb[0] - 3])  # 边界条件残差：y(0) = 0, y(5) = 3    
 
 
 def solve_bvp_scipy(n_initial_points=11):
@@ -135,8 +154,20 @@ def solve_bvp_scipy(n_initial_points=11):
     """
     # TODO: 在此实现 solve_bvp 方法 (预计10-15行代码)
     # [STUDENT_CODE_HERE]
-    
-    raise NotImplementedError("请在此处实现 solve_bvp 方法")
+    x_initial = np.linspace(0, 5, n_initial_points)  # 初始网格点
+    y_initial = np.zeros((2, n_initial_points))  # 初始猜测：y 和 y'
+    y_initial[0, 0] = 0  # 边界条件 y(0) = 0
+    y_initial[0, -1] = 3  # 边界条件 y(5) = 3
+    # 调用 solve_bvp 函数
+    result = solve_bvp(ode_system_for_solve_bvp, boundary_conditions_for_solve_bvp,
+                       x_initial, y_initial)
+    if result.success:  #result.success 是一个布尔值，表示求解是否成功（True 代表成功，False 代表失败）。
+        x_solution = result.x   #result.x 是一个数组，表示最终的自变量（x）网格点。
+        y_solution = result.y[0]
+    else:
+        raise ValueError("求解失败")
+
+    return (x_solution, y_solution)
 
 
 # ============================================================================
