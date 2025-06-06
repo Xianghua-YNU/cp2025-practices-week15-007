@@ -424,6 +424,5 @@ if __name__ == "__main__":
     
     # Run tests
     test_result = run_tests()
-    
     # Exit with appropriate code
     sys.exit(0 if test_result.wasSuccessful() else 1)
